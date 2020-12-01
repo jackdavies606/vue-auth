@@ -1,17 +1,33 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div v-if="authenticated">
+      <AuthInfo/>
+    </div>
+    <div v-else>
+      <h2>UNAUTHORISED!</h2>
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import AuthInfo from './components/AuthInfo.vue'
+import KeycloakHelper from '@/keycloak'
+import Vue from 'vue';
 
 export default {
   name: 'App',
+  data() {
+    return {
+      keycloak: new KeycloakHelper("App.vue"),
+    }
+  },
+  computed: {
+    authenticated() {
+      return Vue.$keycloak.authenticated;
+    }
+  },
   components: {
-    HelloWorld
+    AuthInfo
   }
 }
 </script>
