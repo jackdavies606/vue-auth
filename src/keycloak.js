@@ -18,8 +18,10 @@ export default class KeycloakHelper {
 
     async initialise() {
         return new Promise((resolve, reject) => {
+            console.log("init ")
             Vue.$keycloak.init({
                 onLoad: 'login-required',
+                pkceMethod: "S256"
             }).then(() => {
                 console.log("resoled");
                 resolve(true);

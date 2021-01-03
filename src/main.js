@@ -19,5 +19,3 @@ async function initialise() {
         console.log("Intitialisation falied. Yikes.");
     }
 }
-
-
