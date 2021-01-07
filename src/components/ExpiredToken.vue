@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <p> {{ this.name }} - {{ hours + ":" + minutes + ":" + seconds }} - {{ this.client }}</p>
+  <div class="entry">
+    <p> {{ this.name }} - {{ hours + ":" + minutes + ":" + seconds }} - {{ this.client }} - {{ this.type }}</p>
   </div>
 </template>
 
@@ -10,7 +10,8 @@ export default {
   props: [
     'expired',
     'name',
-    'client'
+    'client',
+    'type',
   ],
   data() {
     return {
@@ -30,5 +31,7 @@ export default {
 </script>
 
 <style>
-
+  .entry:hover {
+    color: black;
+  }
 </style>

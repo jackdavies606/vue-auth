@@ -1,33 +1,36 @@
 <template>
   <div>
-    <p>Authenticated: {{ this.authenticated }}</p>
-    <p>Access Token expires in: {{ this.accessTokenValidForSeconds }}</p>
-    <p>Refresh Token expires in: {{ this.refreshTokenValidForSeconds }}</p>
-    <button v-on:click="updateToken()">update token</button>
-    <button v-on:click="logout()">logout</button>
+    <button class="button" v-on:click="updateToken()">update token</button>
+    <button class="button" v-on:click="logout()">logout</button>
 
-    <div class="userinfo expiredTokenList">
+    <div class="expiredTokenList">
       <div v-for="token in this.expiredTokens" :key="token.expired">
-        <expired-token v-bind:expired="token.expired" v-bind:client="token.client" v-bind:name="token.name"></expired-token>
+        <expired-token v-bind:expired="token.expired" v-bind:client="token.client" v-bind:name="token.name" v-bind:type="token.type"></expired-token>
       </div>
     </div>
 
-    <div class="row">
-      <div class="column userinfo">
-        <tree-view :data="userInfo"></tree-view>
-      </div>
-      <div class="column">
-        <tree-view :data="idTokenParsed"></tree-view>
-      </div>
-    </div>
+    <div class="table">
+      <div class="row primaryRow">
+        <div class="column">
+          <h3>Access Token: expires in {{ this.accessTokenValidForSeconds }}</h3>
+          <tree-view :data="parsedAccessToken"></tree-view>
+        </div>
 
-    <div class="row">
-      <div class="column parsedtoken">
-        <tree-view :data="parsedAccessToken"></tree-view>
+        <div class="column">
+          <h3>ID Token: expires in {{ this.idTokenValidForSeconds }}</h3>
+          <tree-view :data="idTokenParsed"></tree-view>
+        </div>
       </div>
 
-      <div class="column parsedtoken">
-        <tree-view :data="parsedRefreshToken"></tree-view>
+      <div class="row secondaryRow">
+        <div class="column">
+          <h3>User Info</h3>
+          <tree-view :data="userInfo"></tree-view>
+        </div>
+        <div class="column">
+          <h3>Refresh Token: expires in {{ this.refreshTokenValidForSeconds }}</h3>
+          <tree-view :data="parsedRefreshToken"></tree-view>
+        </div>
       </div>
     </div>
 
@@ -60,9 +63,10 @@ export default {
       accessToken: null,
       parsedAccessToken: null,
       accessTokenValidForSeconds: null,
+      idTokenParsed: null,
+      idTokenValidForSeconds: null,
       refreshToken: null,
       parsedRefreshToken: null,
-      idTokenParsed: null,
       refreshTokenValidForSeconds: null,
       authenticated: null,
       userInfo: null,
@@ -79,10 +83,11 @@ export default {
         const now = Math.round(new Date().getTime() / 1000);
         const accessTokenExpires = this.parsedAccessToken.exp;
         const refreshTokenExpires = this.parsedRefreshToken.exp;
+        const idTokenExpires = this.idTokenParsed.exp;
 
         this.accessTokenValidForSeconds = this.calculateExpiry(accessTokenExpires, now);
+        this.idTokenValidForSeconds = this.calculateExpiry(idTokenExpires, now);
         this.refreshTokenValidForSeconds = this.calculateExpiry(refreshTokenExpires, now);
-
       }, 250)
     },
     updateToken() {
@@ -90,7 +95,8 @@ export default {
         this.expiredTokens.push({
           expired: this.parsedAccessToken.exp,
           name: this.parsedAccessToken.name,
-          client: this.parsedAccessToken.azp
+          client: this.parsedAccessToken.azp,
+          type: this.parsedAccessToken.typ
         })
         this.setData();
       }).catch(() => {
@@ -116,7 +122,6 @@ export default {
       this.parsedRefreshToken = this.parseJwt(this.refreshToken);
       this.idTokenParsed = Vue.$keycloak.idTokenParsed;
       this.getUserInfo();
-      // this.userInfo = Vue.$keycloak.userInfo;
     },
     parseJwt (token) {
       const base64Url = token.split('.')[1];
@@ -130,23 +135,58 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-.userinfo {
-  /*max-width: 500px;*/
-  background: #1edbaf;
-  height: 200px;
+.table {
+  margin: auto;
+  width: fit-content;
+  max-width: 1000px;
+  padding: 5px;
 }
 
-.parsedtoken {
+.primaryRow {
   background: #598eb1;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.secondaryRow {
+  background: #1edbaf;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.expiredTokenList {
+  max-width: 800px;
+  border-top-right-radius: 20px;
+  background: cadetblue;
+  height: 200px;
+  max-height: 200px;
+  margin: auto;
+}
+
+.button{
+  display:inline-block;
+  padding:0.4em 1.5em;
+  margin:0 0.3em 0.3em 0;
+  border-radius:2em;
+  box-sizing: border-box;
+  text-decoration:none;
+  font-family:'Roboto',sans-serif;
+  font-weight:500;
+  font-size: 1.2em;
+  color:#FFFFFF;
+  background-color:#4eb5f1;
+  text-align:center;
+  transition: all 0.2s;
+  border: none;
+}
+.button:hover{
+  background-color:#4095c6;
 }
 
 /* The Tree View should only fill out available space, scroll when
    necessary.
 */
-
-
 .tree-view-item {
   font-family: monospace;
   font-size: 14px;
@@ -223,6 +263,10 @@ export default {
   border-radius: 20px;
   padding-right: 5px;
   /*height: 300px; !* Should be removed. Only for demonstration *!*/
+}
+
+.column:hover {
+  color: black;
 }
 
 /* Clear floats after the columns */
