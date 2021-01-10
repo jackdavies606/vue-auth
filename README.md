@@ -1,5 +1,7 @@
 # Using OIDC to Secure a SPA #
 
+![Alt text](./screenshot.png?raw=true "ui")
+
 ## Project setup ###
 ```
 npm install

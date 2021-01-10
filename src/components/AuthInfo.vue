@@ -1,11 +1,15 @@
 <template>
   <div>
-    <button class="button" v-on:click="updateToken()">update token</button>
+    <button class="button {}" v-on:click="updateToken()">update token</button>
     <button class="button" v-on:click="logout()">logout</button>
 
     <div class="expiredTokenList">
-      <div v-for="token in this.expiredTokens" :key="token.expired">
-        <expired-token v-bind:expired="token.expired" v-bind:client="token.client" v-bind:name="token.name" v-bind:type="token.type"></expired-token>
+      <h3>Old Tokens</h3>
+      <div v-if="this.expiredTokens.length === 0">
+        <h4>You don't have any old tokens yet.</h4>
+      </div>
+      <div v-else v-for="token in this.expiredTokens" :key="token.randomId">
+        <expired-token v-bind:expired="token.expired" v-bind:issuedAt="token.issuedAt" v-bind:type="token.type"></expired-token>
       </div>
     </div>
 
@@ -39,7 +43,6 @@
 
 <script>
 import Vue from 'vue';
-import { EventBus } from '@/../event-bus.js';
 import { TreeView } from "vue-json-tree-view"
 import ExpiredToken from '@/components/ExpiredToken'
 
@@ -50,13 +53,9 @@ export default {
     ExpiredToken
   },
   mounted() {
-    EventBus.$on('onTokenExpired', () => {
-      console.log('Event received: onTokenExpired');
-      this.updateToken();
-    });
-
-    this.setData();
-    this.updateTokenExpiryCallback();
+    this.setTokens();
+    this.setUserInfo()
+    this.analyseSecondsUntilTokenExpiry();
   },
   data() {
     return {
@@ -70,7 +69,8 @@ export default {
       refreshTokenValidForSeconds: null,
       authenticated: null,
       userInfo: null,
-      expiredTokens: []
+      expiredTokens: [],
+      tokenExpired: false
     }
   },
   methods: {
@@ -78,7 +78,7 @@ export default {
       const remainingSeconds = expires - now;
       return remainingSeconds < 1 ? 0 : remainingSeconds;
     },
-    updateTokenExpiryCallback() {
+    analyseSecondsUntilTokenExpiry() {
       setInterval(() => {
         const now = Math.round(new Date().getTime() / 1000);
         const accessTokenExpires = this.parsedAccessToken.exp;
@@ -92,38 +92,44 @@ export default {
     },
     updateToken() {
       Vue.$keycloak.updateToken(60).then(() => {
-        this.expiredTokens.push({
-          expired: this.parsedAccessToken.exp,
-          name: this.parsedAccessToken.name,
-          client: this.parsedAccessToken.azp,
-          type: this.parsedAccessToken.typ
-        })
-        this.setData();
-      }).catch(() => {
-        console.error("failed to update token");
+        // add expired tokens to list
+        this.addExpiredToken(this.parsedAccessToken);
+        this.addExpiredToken(this.idTokenParsed);
+
+        this.tokenExpired = false;
+        this.setTokens();
+        this.setUserInfo();
+      }).catch((error) => {
+        console.error("Failed to update token: " + error);
       });
     },
-    getUserInfo() {
-      Vue.$keycloak.loadUserInfo().then(() => {
-        console.log("user info call success");
-        this.userInfo = Vue.$keycloak.userInfo;
-      }).catch(() => {
-        console.error("failed to get user info");
-      });
-    },
-    logout() {
-      Vue.$keycloak.logout();
-    },
-    setData() {
+    setTokens() {
       this.accessToken = Vue.$keycloak.token;
       this.parsedAccessToken = Vue.$keycloak.tokenParsed;
       this.authenticated = Vue.$keycloak.authenticated;
       this.refreshToken = Vue.$keycloak.refreshToken;
       this.parsedRefreshToken = this.parseJwt(this.refreshToken);
       this.idTokenParsed = Vue.$keycloak.idTokenParsed;
-      this.getUserInfo();
     },
-    parseJwt (token) {
+    setUserInfo() {
+      Vue.$keycloak.loadUserInfo().then(() => {
+        this.userInfo = Vue.$keycloak.userInfo;
+      }).catch((error) => {
+        console.error("Failed to get userinfo: " + error);
+      });
+    },
+    logout() {
+      Vue.$keycloak.logout();
+    },
+    addExpiredToken(token) {
+      this.expiredTokens.push({
+        randomId: Math.random(),
+        expired: token.exp,
+        type: token.typ,
+        issuedAt: token.iat
+      })
+    },
+    parseJwt(token) {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
@@ -180,6 +186,7 @@ export default {
   transition: all 0.2s;
   border: none;
 }
+
 .button:hover{
   background-color:#4095c6;
 }

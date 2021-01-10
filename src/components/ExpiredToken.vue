@@ -1,6 +1,8 @@
 <template>
-  <div class="entry">
-    <p> {{ this.name }} - {{ hours + ":" + minutes + ":" + seconds }} - {{ this.client }} - {{ this.type }}</p>
+  <div class="row">
+    <div class="column">{{ this.type }}</div>
+    <div class="column">issued({{ this.iss.hours }}:{{ this.iss.minutes }}:{{this.iss.seconds}})</div>
+    <div class="column">expired({{ this.exp.hours }}:{{ this.exp.minutes }}:{{this.exp.seconds}})</div>
   </div>
 </template>
 
@@ -9,29 +11,48 @@ export default {
   name: 'ExpiredToken',
   props: [
     'expired',
-    'name',
-    'client',
     'type',
+    'issuedAt'
   ],
   data() {
     return {
-      hours: 0,
-      minutes: 0,
-      seconds: 0
+      exp: {
+        hours: 0,
+        minutes: 0,
+        seconds: 0
+      },
+      iss: {
+        hours: 0,
+        minutes: 0,
+        seconds: 0
+      }
     }
   },
   mounted() {
-    const date = new Date(this.expired);
-    console.log(this.expired)
-    this.hours = date.getHours();
-    this.minutes = date.getMinutes();
-    this.seconds = date.getSeconds();
+    const dateExp = new Date(this.expired * 1000);
+    this.exp.hours = dateExp.getUTCHours();
+    this.exp.minutes = dateExp.getUTCMinutes();
+    this.exp.seconds = dateExp.getUTCSeconds();
+
+    const dateIss = new Date(this.issuedAt * 1000);
+    this.iss.hours = dateIss.getUTCHours();
+    this.iss.minutes = dateIss.getUTCMinutes();
+    this.iss.seconds = dateIss.getUTCSeconds();
   },
 }
 </script>
 
-<style>
-  .entry:hover {
+<style scoped>
+  .column {
+    width: 130px;
+  }
+
+  .row {
+    margin: auto;
+    width: fit-content;
+  }
+
+  .row:hover {
     color: black;
   }
 </style>
