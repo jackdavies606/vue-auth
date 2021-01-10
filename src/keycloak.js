@@ -18,15 +18,12 @@ export default class KeycloakHelper {
 
     async initialise() {
         return new Promise((resolve, reject) => {
-            console.log("init ")
             Vue.$keycloak.init({
                 onLoad: 'login-required',
                 pkceMethod: "S256"
             }).then(() => {
-                console.log("resoled");
                 resolve(true);
             }).catch(() => {
-                console.log("rejected");
                 reject(false);
             });
         });
@@ -55,33 +52,3 @@ Vue.$keycloak.onTokenExpired = () => {
   console.log("onTokenExpired");
   EventBus.$emit('onTokenExpired');
 }
-
-// keycloakJs.onTokenExpired = () => {
-//     console.log("onTokenExpired");
-// }
-keycloakJs.onAuthRefreshError = () => {
-    console.log("onAuthRefreshError")
-}
-keycloakJs.onAuthError = () => {
-    console.log("onAuthError")
-}
-keycloakJs.onReady = () => {
-    console.log("onReady")
-}
-keycloakJs.onAuthSuccess = () => {
-    console.log("onAuthSuccess");
-}
-keycloakJs.onAuthRefreshSuccess = () => {
-    console.log("onAuthRefreshSuccess");
-}
-keycloakJs.onAuthLogout = () => {
-    console.log("onAuthLogout");
-}
-
-// set this in the component
-// let tokenExpired = () => {};
-// // call this in the event
-// function handleTokenExpired() {
-//     console.log("handleTokenExpired")
-//     tokenExpired();
-// }

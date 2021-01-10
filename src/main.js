@@ -11,11 +11,11 @@ async function initialise() {
     const success = await new KeycloakHelper('main.js').initialise();
 
     if (success) {
-        console.log("is authenticated (pre-mount): " + Vue.$keycloak.authenticated);
+        console.log("initialise() complete. Authenticated!");
         new Vue({
             render: h => h(App),
         }).$mount('#app')
     } else {
-        console.log("Intitialisation falied. Yikes.");
+        console.log("initialise() failed. Yikes.");
     }
 }
